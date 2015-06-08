@@ -14,8 +14,8 @@ describe 'CutePets' do
 
     it 'fetches pet finder data when the env var datasource is set to petfinder' do
       ENV.stub :fetch, 'petfinder' do
-        PetFetcher.stub(:get_pet, @pet) do
-          TweetGenerator.stub(:tweet, nil, [String, String]) do
+        CutePets::PetFetcher.stub(:get_pet, @pet) do
+          CutePets::TweetGenerator.stub(:tweet, nil, [String, String]) do
             CutePets.post_pet
           end
         end

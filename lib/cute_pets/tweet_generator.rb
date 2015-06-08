@@ -9,22 +9,24 @@ require 'yaml'
 require 'dotenv'
 Dotenv.load
 
-module TweetGenerator
-  extend self
+module CutePets
+  module TweetGenerator
+    extend self
 
-  def tweet(pet)
-    client.update_with_media(pet.introduction, open(pet.pic))
-  end
+    def tweet(pet)
+      client.update_with_media(pet.introduction, open(pet.pic))
+    end
 
-  def client
-    Twitter::REST::Client.new do |config|
-      begin
-        config.consumer_key = ENV.fetch('api_key')
-        config.consumer_secret = ENV.fetch('api_secret')
-        config.access_token = ENV.fetch('access_token')
-        config.access_token_secret = ENV.fetch('access_token_secret')
-      rescue KeyError
-        raise "Please check that your twitter keys are correct"
+    def client
+      Twitter::REST::Client.new do |config|
+        begin
+          config.consumer_key = ENV.fetch('api_key')
+          config.consumer_secret = ENV.fetch('api_secret')
+          config.access_token = ENV.fetch('access_token')
+          config.access_token_secret = ENV.fetch('access_token_secret')
+        rescue KeyError
+          raise "Please check that your twitter keys are correct"
+        end
       end
     end
   end

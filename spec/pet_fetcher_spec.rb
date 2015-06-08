@@ -2,7 +2,7 @@ require 'cute_pets/pet_fetcher'
 require 'webmock/minitest'
 require 'vcr'
 
-describe 'PetFetcher' do
+describe CutePets::PetFetcher do
   VCR.configure do |c|
     c.cassette_library_dir = 'spec/fixtures/vcr_cassettes'
     c.hook_into :webmock
@@ -13,8 +13,8 @@ describe 'PetFetcher' do
     it 'should call get_petfinder_pet' do
       mock = MiniTest::Mock.new
       mock.expect(:call, nil)
-      PetFetcher.stub(:get_petfinder_pet, mock) do
-        PetFetcher.get_pet('petfinder')
+      CutePets::PetFetcher.stub(:get_petfinder_pet, mock) do
+        CutePets::PetFetcher.get_pet('petfinder')
       end
       mock.verify
     end
@@ -22,15 +22,15 @@ describe 'PetFetcher' do
     it 'should call get_petharbor_pet' do
       mock = MiniTest::Mock.new
       mock.expect(:call, nil)
-      PetFetcher.stub(:get_petharbor_pet, mock) do
-        PetFetcher.get_pet('petharbor')
+      CutePets::PetFetcher.stub(:get_petharbor_pet, mock) do
+        CutePets::PetFetcher.get_pet('petharbor')
       end
       mock.verify
     end
 
     it 'should blow up' do
       assert_raises(RuntimeError, "ENV['pet_datasource'] not specified") do
-        PetFetcher.get_pet('lolidk')
+        CutePets::PetFetcher.get_pet('lolidk')
       end
     end
   end
@@ -38,7 +38,7 @@ describe 'PetFetcher' do
   describe '.get_petfinder_pet' do
     it 'returns a hash of pet data when the API request is successful' do
       VCR.use_cassette('petfinder', record: :once) do
-        pet_hash = PetFetcher.get_petfinder_pet
+        pet_hash = CutePets::PetFetcher.get_petfinder_pet
         pet_hash[:description].must_equal 'altered male ferret'
         pet_hash[:pic].must_equal 'http://photos.petfinder.com/photos/pets/30078059/1/?bust=1409196072&width=500&-x.jpg'
         pet_hash[:link].must_equal 'https://www.petfinder.com/petdetail/30078059'
@@ -48,15 +48,15 @@ describe 'PetFetcher' do
 
     it 'raises when the API request fails' do
       stub_request(:get, /^http\:\/\/api\.petfinder\.com\/pet\.getRandom/).to_return(:status => 500)
-      lambda { PetFetcher.get_petfinder_pet }.must_raise RuntimeError
+      lambda { CutePets::PetFetcher.get_petfinder_pet }.must_raise RuntimeError
     end
   end
 
   describe '.get_petharbor_pet' do
     it 'returns a hash of pet data when the request is successful' do
-      PetFetcher.stub(:get_petharbor_pet_type, 'dog') do
+      CutePets::PetFetcher.stub(:get_petharbor_pet_type, 'dog') do
         VCR.use_cassette('petharbor', record: :once) do
-          pet_hash = PetFetcher.get_petharbor_pet
+          pet_hash = CutePets::PetFetcher.get_petharbor_pet
           pet_hash[:description].must_equal 'neutered male white bichon frise'
           pet_hash[:pic].must_equal 'http://www.PetHarbor.com/get_image.asp?RES=Thumb&ID=A223117&LOCATION=DNVR'
           pet_hash[:link].must_equal 'http://www.PetHarbor.com/detail.asp?ID=A223117&LOCATION=DNVR&searchtype=rnd&shelterlist=\'DNVR\'&where=dummy&kiosk=1'
@@ -68,25 +68,25 @@ describe 'PetFetcher' do
 
   it 'raises when the request fails' do
     stub_request(:get, /^http\:\/\/www\.petharbor\.com\/petoftheday\.asp/).to_return(:status => 500)
-    lambda { PetFetcher.get_petharbor_pet }.must_raise RuntimeError
+    lambda { CutePets::PetFetcher.get_petharbor_pet }.must_raise RuntimeError
   end
 
   describe 'get_petfinder_option' do
     it 'uses friendly values' do
-      PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "housebroken"}}).must_equal 'house trained'
-      PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "housetrained"}}).must_equal 'house trained'
-      PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "noClaws"}}).must_equal 'declawed'
-      PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "altered"}}).must_equal 'altered'
+      CutePets::PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "housebroken"}}).must_equal 'house trained'
+      CutePets::PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "housetrained"}}).must_equal 'house trained'
+      CutePets::PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "noClaws"}}).must_equal 'declawed'
+      CutePets::PetFetcher.send(:get_petfinder_option, {"option" => {"$t" => "altered"}}).must_equal 'altered'
     end
 
     it 'handles multiple values in the options hash' do
-      PetFetcher.send(:get_petfinder_option,
+      CutePets::PetFetcher.send(:get_petfinder_option,
                       {"option" => [{"$t" => "hasShots"},
                                     {"$t" => "noClaws"}]}).must_equal 'declawed'
     end
 
     it 'ignores some possible values' do
-      PetFetcher.send(:get_petfinder_option,
+      CutePets::PetFetcher.send(:get_petfinder_option,
                       {"option" => [{"$t" => "hasShots"},
                                     {"$t" => "noCats"},
                                     {"$t" => "noDogs"},
@@ -99,11 +99,11 @@ describe 'PetFetcher' do
 
   describe 'get_petfinder_breed' do
     it 'works with a single hash' do
-      PetFetcher.send(:get_petfinder_breed, {"breed" => {"$t" => "Spaniel"}}).must_equal 'Spaniel'
+      CutePets::PetFetcher.send(:get_petfinder_breed, {"breed" => {"$t" => "Spaniel"}}).must_equal 'Spaniel'
     end
 
     it 'works with an array of hashes' do
-      PetFetcher.send(:get_petfinder_breed, {"breed" => [{"$t" => "Spaniel"}, {"$t" => "Pomeranian"}]}).must_equal 'Spaniel/Pomeranian mix'
+      CutePets::PetFetcher.send(:get_petfinder_breed, {"breed" => [{"$t" => "Spaniel"}, {"$t" => "Pomeranian"}]}).must_equal 'Spaniel/Pomeranian mix'
     end
   end
 end
