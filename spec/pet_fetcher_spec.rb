@@ -1,5 +1,4 @@
 require 'cute_pets/pet_fetcher'
-require 'minitest/autorun'
 require 'webmock/minitest'
 require 'vcr'
 
@@ -7,6 +6,33 @@ describe 'PetFetcher' do
   VCR.configure do |c|
     c.cassette_library_dir = 'spec/fixtures/vcr_cassettes'
     c.hook_into :webmock
+  end
+
+  describe '.get_pet' do
+    # mocking class methods in minitest is weird
+    it 'should call get_petfinder_pet' do
+      mock = MiniTest::Mock.new
+      mock.expect(:call, nil)
+      PetFetcher.stub(:get_petfinder_pet, mock) do
+        PetFetcher.get_pet('petfinder')
+      end
+      mock.verify
+    end
+
+    it 'should call get_petharbor_pet' do
+      mock = MiniTest::Mock.new
+      mock.expect(:call, nil)
+      PetFetcher.stub(:get_petharbor_pet, mock) do
+        PetFetcher.get_pet('petharbor')
+      end
+      mock.verify
+    end
+
+    it 'should blow up' do
+      assert_raises(RuntimeError, "ENV['pet_datasource'] not specified") do
+        PetFetcher.get_pet('lolidk')
+      end
+    end
   end
 
   describe '.get_petfinder_pet' do
@@ -19,7 +45,7 @@ describe 'PetFetcher' do
         pet_hash[:name].must_equal 'Joey'
       end
     end
- 
+
     it 'raises when the API request fails' do
       stub_request(:get, /^http\:\/\/api\.petfinder\.com\/pet\.getRandom/).to_return(:status => 500)
       lambda { PetFetcher.get_petfinder_pet }.must_raise RuntimeError

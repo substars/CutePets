@@ -12,20 +12,8 @@ Dotenv.load
 module TweetGenerator
   extend self
 
-  MESSAGES = YAML.load(File.open('lib/greetings.yml'))
-
-  def tweet(message, pet_pic_url)
-    pet_pic_img = open(pet_pic_url)
-    client.update_with_media(message, pet_pic_img)
-  end
-
-  def create_message(pet_name, pet_description, pet_link)
-    full_description = %w(a e i o u).include?(pet_description[0]) ? "an #{pet_description}" : "a #{pet_description}"
-    "#{greeting} #{pet_name}. I am #{full_description}. #{pet_link}"
-  end
-
-  def greeting
-    MESSAGES.sample
+  def tweet(pet)
+    client.update_with_media(pet.introduction, open(pet.pic))
   end
 
   def client
