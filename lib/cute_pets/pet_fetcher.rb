@@ -1,14 +1,21 @@
 require 'net/http'
 require 'json'
-require 'open-uri'
-require 'hpricot'
-require 'dotenv'
-Dotenv.load
 
 module PetFetcher
   extend self
 
-  def get_petfinder_pet()
+  def get_pet(source)
+    case source.downcase
+      when 'petfinder'
+        get_petfinder_pet
+      when 'petharbor'
+        get_petharbor_pet
+      else
+        raise "ENV['pet_datasource'] not specified"
+    end
+  end
+
+  def get_petfinder_pet
     uri = URI('http://api.petfinder.com/pet.getRandom')
     params = {
       format:    'json',
@@ -33,7 +40,7 @@ module PetFetcher
     end
   end
 
-  def get_petharbor_pet()
+  def get_petharbor_pet
     uri = URI('http://www.petharbor.com/petoftheday.asp')
 
     params = {
@@ -47,17 +54,12 @@ module PetFetcher
     response = Net::HTTP.get_response(uri)
     if response.kind_of? Net::HTTPSuccess
       # The html response comes wrapped in some js :(
-      response_html = response.body.gsub(/^document.write\s+\(\"/, '')
-      response_html = response_html.gsub(/\"\);/, '')
-
-      doc = Hpricot(response_html)
-      pet_url = doc.at('//a').attributes['href']
-      pet_url = pet_url.gsub('\"', '').gsub('\\', '')
-      pet_pic_html = doc.at('//a').inner_html
-      pet_pic_url = pet_pic_html.match(/SRC=\\\"(?<url>.+)\\\"\s+border/)['url']
-      table_cols = doc.search('//td')
-      name = table_cols[1].inner_text.match(/^(?<name>\w+)\s+/)['name'].capitalize
-      description = table_cols[3].inner_text.downcase
+      response_html = response.body.gsub(/^document.write\s+\(/, '').gsub(/\);/, '').gsub('\"', '"')
+      doc = Oga.parse_html(response_html)
+      pet_url = doc.at_css('A').attribute('href').value
+      pet_pic_url = doc.at_css('A IMG').attribute('SRC').value
+      name = doc.at_css('FONT').inner_text.match(/^(?<name>\w+)\s+/)['name'].capitalize
+      description = doc.css('FONT')[2].inner_text.downcase
       {
         pic:   pet_pic_url,
         link:  pet_url,

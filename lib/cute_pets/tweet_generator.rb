@@ -1,4 +1,3 @@
-require 'twitter'
 require 'open-uri'
 # This is terrible, but required. It resets a const in open-uri to guarantee that a File object
 # is always returned when open() is called. Without it, data less than 10k will cause open() to

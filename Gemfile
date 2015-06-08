@@ -1,11 +1,11 @@
 source 'https://rubygems.org'
 
-ruby '2.1.2'
+ruby '2.1.6'
 
-gem 'twitter'
 gem 'dotenv'
-gem 'hpricot'
+gem 'oga'
 gem 'rake'
+gem 'twitter'
 
 group :test do
   gem 'minitest'
