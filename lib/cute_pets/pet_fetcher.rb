@@ -30,12 +30,12 @@ module CutePets
       if response.kind_of? Net::HTTPSuccess
         json = JSON.parse(response.body)
         pet_json  = json['petfinder']['pet']
-        {
-          pic:   get_photo(pet_json),
-          link:  "https://www.petfinder.com/petdetail/#{pet_json['id']['$t']}",
-          name:  pet_json['name']['$t'].capitalize,
-          description: [get_petfinder_option(pet_json['options']), get_petfinder_sex(pet_json['sex']['$t']),  get_petfinder_breed(pet_json['breeds'])].compact.join(' ').downcase
-        }
+        CutePets::Pet.new(
+          pet_json['name']['$t'].capitalize,
+          [get_petfinder_option(pet_json['options']), get_petfinder_sex(pet_json['sex']['$t']),  get_petfinder_breed(pet_json['breeds'])].compact.join(' ').downcase,
+          get_photo(pet_json),
+          "https://www.petfinder.com/petdetail/#{pet_json['id']['$t']}"
+        )
       else
         raise 'PetFinder api request failed'
       end
@@ -61,12 +61,7 @@ module CutePets
         pet_pic_url = doc.at_css('A IMG').attribute('SRC').value
         name = doc.at_css('FONT').inner_text.match(/^(?<name>\w+)\s+/)['name'].capitalize
         description = doc.css('FONT')[2].inner_text.downcase
-        {
-          pic:   pet_pic_url,
-          link:  pet_url,
-          name:  name,
-          description: description
-        }
+        CutePets::Pet.new(name, description, pet_pic_url, pet_url)
       else
         raise 'PetHarbor request failed'
       end

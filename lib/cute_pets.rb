@@ -8,8 +8,6 @@ module CutePets
   extend self
 
   def post_pet
-    if pet = PetFetcher.get_pet(ENV.fetch('pet_datasource'))
-      TweetGenerator.tweet(pet.introduction, pet.pic)
-    end
+      TweetGenerator.tweet(PetFetcher.get_pet(ENV.fetch('pet_datasource')))
   end
 end
